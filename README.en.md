@@ -14,4 +14,4 @@ Element with `data-fieldAutosize-disable="true"` is not processed.
 If textarea is invisible on execution of plugin, then it will not be processed.
 
 `fieldAutosize.process(selector)` finds all textareas by `selector` and resize them.   
-`fieldAutosize.handle(elem)` обрабатывает элемент в документе, элемент должен быть в `DOM`.
+`fieldAutosize.handle(elem)` processing element in the document, the element must be in `DOM`.
