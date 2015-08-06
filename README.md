@@ -1,2 +1,15 @@
 # fieldAutosize
-Little pure js plugin that automatically forces a fields of forms to respect dimensions of their contents
+Небольшой плагин без зависимостей для того, чтобы текстовые поля изменяли свой размер по содержимому.
+
+Плагин уважает выбор [блочной модели](https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing) и реагирует на события `input` и `change` благодаря делегации.
+
+Если поддерживается [Mutation Observer](http://caniuse.com/#feat=mutationobserver), реагирует и на элементы, добавляемые после его срабатывания.
+
+Плагин не изменяет размеры элемента, если элемент в момент его первых запусков не видим. Тогда его можно активировать вручную:
+
+— метод `fieldAutosize.process(selector)` обрабатывает все текстовые поля по `selector`
+— метод `fieldAutosize.handle(elem)` обрабатывает элемент в документе, элемент должен быть в `DOM`.
+
+При помощи `fieldAutosize.active = false` можно выключить плагин в любой момент.
+
+Атрибут `data-fieldAutosize-disable="true"` исключит элемент из обработки.

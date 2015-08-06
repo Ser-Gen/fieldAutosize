@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="windows-1251">
+		<title>test--textarea-resize</title>
+
+		<script src="fieldAutosize.js"></script>
+
+		<style>
+		body {
+			box-sizing: border-box;
+		}
+
+		textarea {
+			box-sizing: inherit;
+			border: 15px solid red;
+			display: block;
+			min-height: 7.3em;
+			padding: 10px;
+			resize: horizontal;
+		}
+		</style>
+	</head>
+	<body>
+		<textarea class="lol"></textarea>
+		<p><button id="add">Добавить поле</button></p>
+
+		<script>
+
+			function addTextarea() {
+				var t = document.createElement('textarea');
+
+				document.body.appendChild(t);
+			};
+
+			if (window.addEventListener !== undefined) {
+				add.addEventListener('click', addTextarea);
+			} else {
+				add.attachEvent('onclick', addTextarea);
+			};
+
+		</script>
+	</body>
+</html>
