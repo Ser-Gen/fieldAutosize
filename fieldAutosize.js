@@ -7,22 +7,46 @@
 
 (function() {
 
+	// проверяем, доступны ли нужные возможности
+	var isBrowserOld = false;
+
+	if (!window.Element || !window.addEventListener) {
+		isBrowserOld = true;
+	};
+
+	// поиск по подстроке
+	if (!Element.prototype.matches) {
+		Element.prototype.matches =
+			Element.prototype.webkitMatchesSelector
+			|| Element.prototype.mozMatchesSelector
+			|| Element.prototype.msMatchesSelector
+			|| Element.prototype.oMatchesSelector
+			|| null;
+	};
+
+	if (!Element.prototype.matches) {
+		isBrowserOld = true;
+	};
+
 	// если исполняется в старом браузере,
 	// возвращаем безопасные методы
-	if (window.addEventListener === undefined) {
+	if (isBrowserOld) {
 
 		window.fieldAutosize = {
 			process: function () {},
 			handle: function () {}
 		};
-		return false;
+		return;
 
 	} else {
 
 		var _ = window.fieldAutosize = {
 
 			// селектор, по которому будут обрабатываться элементы
-			selector: 'textarea',
+			selector: (window.fieldAutosize && window.fieldAutosize.selector) || 'textarea',
+
+			// селектор, по которому исключатся элементы
+			exclude: (window.fieldAutosize && window.fieldAutosize.exclude) || false,
 
 			// обрабатываем элементы по очереди
 			process: function (e) {
@@ -51,11 +75,11 @@
 						// если передан неверный элемент
 						// или элемент не должен обрабатываться,
 						// выключаем
-						if (
-							(elem.nodeName.toLowerCase() !== 'textarea')
+						if ((elem.nodeName.toLowerCase() !== 'textarea')
 							|| (elem.getAttribute('data-fieldAutosize-disable') === 'true')
-							) {
-							return false;
+							|| (!elem.matches(_.selector))
+							|| (_.exclude !== false && elem.matches(_.exclude))) {
+							return;
 						};
 
 						_.handle(elem);
@@ -63,10 +87,12 @@
 				};
 			},
 
-			// обработываем элемент
+			// обрабатываем элемент
 			handle: function (elem) {
 
-				if (!_.active) { return false; };
+				if (!_.active) {
+					return;
+				};
 
 				// получаем готовый стиль элемента
 				var style = getComputedStyle(elem);
@@ -75,25 +101,21 @@
 				// если элемент не отображается или не видим
 				if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0)
 					|| (style.display === 'none')) {
-					return false;
+					return;
 				};
 
 				// нужно выставлять разную высоту
 				// в зависимости от блочной модели
-				switch (style.boxSizing) {
-					case 'border-box':
-						indent = -(parseInt(style.borderTopWidth)
-							     + parseInt(style.borderBottomWidth)) || 0;
-						break;
-
-					case 'padding-box':
-						indent = 0;
-						break;
-
-					default:
-						indent = parseInt(style.paddingTop)
-						       + parseInt(style.paddingBottom) || 0;
-						break;
+				if (style.boxSizing === 'border-box') {
+					indent = -(parseInt(style.borderTopWidth)
+					         + parseInt(style.borderBottomWidth));
+				}
+				else if (style.boxSizing === 'padding-box') {
+					indent = 0;
+				}
+				else {
+					indent = parseInt(style.paddingTop)
+					       + parseInt(style.paddingBottom);
 				};
 
 				// установка высоты элемента
@@ -102,7 +124,7 @@
 			},
 
 			// включен ли плагин
-			active: true
+			active: (window.fieldAutosize && window.fieldAutosize.active) || true
 		};
 	};
 
