@@ -15,3 +15,6 @@ If textarea is invisible on execution of plugin, then it will not be processed.
 
 `fieldAutosize.process(selector)` finds all textareas by `selector` and resize them.   
 `fieldAutosize.handle(elem)` processing element in the document, the element must be in `DOM`.
+
+With `selector` property you can specify which elements will be processed.   
+Use `exclude` property to exclude elements from processing list.
