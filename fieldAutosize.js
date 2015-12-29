@@ -1,6 +1,8 @@
 /*!
  * Автоматическое изменение размера текстового поля под содержимое
  *
+ * Версия 1.0.0
+ *
  * https://github.com/Ser-Gen/fieldAutosize
  * Лицензия MIT
  */
@@ -8,11 +10,16 @@
 (function() {
 
 	// проверяем, доступны ли нужные возможности
-	var isBrowserOld = false;
 
-	if (!window.Element || !window.addEventListener) {
-		isBrowserOld = true;
+	// отслежвание изменений в документе
+	if (!MutationObserver) {
+		var MutationObserver =
+			window.MutationObserver
+			|| window.WebKitMutationObserver
+			|| null;
 	};
+
+	var isBrowserOld = false;
 
 	// поиск по подстроке
 	if (!Element.prototype.matches) {
@@ -38,7 +45,8 @@
 		};
 		return;
 
-	} else {
+	}
+	else {
 
 		var _ = window.fieldAutosize = {
 
@@ -50,6 +58,18 @@
 
 			// обрабатываем элементы по очереди
 			process: function (e) {
+
+				// если выключен, выходим
+				if (!_.active) {
+					return;
+				};
+
+				// если ничего не передано
+				// обрабатываем элементы по стандартному селектору
+				if (!e) {
+					e = _.selector;
+				};
+
 				var elems = [];
 
 				if (typeof e === 'object') {
@@ -82,6 +102,9 @@
 							return;
 						};
 
+						// отключаем изменение размеров
+						elem.style.resize = 'none';
+
 						_.handle(elem);
 					});
 				};
@@ -90,6 +113,7 @@
 			// обрабатываем элемент
 			handle: function (elem) {
 
+				// если выключен, выходим
 				if (!_.active) {
 					return;
 				};
@@ -98,9 +122,31 @@
 				var style = getComputedStyle(elem);
 				var indent;
 
-				// если элемент не отображается или не видим
-				if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0)
-					|| (style.display === 'none')) {
+				// если элемент невидим
+				if (isHidden(elem, style)) {
+
+					// если возможно следить за изменениями элементов
+					// следим за элементом и его родителями,
+					// от которых может зависеть отображение элемента
+					if (MutationObserver && _.watchHidden) {
+						var watchTargets = getWatchTargets(elem);
+
+						var observer = new MutationObserver(function(mutations) {
+							mutations.forEach(function(mutation) {
+								observer.disconnect();
+								_.handle(elem);
+							});
+						});
+
+						watchTargets.forEach(function(target, index){
+							observer.observe(target, {
+								attributes: true,
+								attributeFilter: _.watchAttrs
+							});
+						});
+					};
+
+					// иначе не делаем ничего
 					return;
 				};
 
@@ -124,16 +170,19 @@
 			},
 
 			// включен ли плагин
-			active: (window.fieldAutosize && window.fieldAutosize.active) || true
+			active: (window.fieldAutosize && window.fieldAutosize.active) || true,
+
+			// следить ли за скрытыми полями
+			watchHidden: (window.fieldAutosize && window.fieldAutosize.watchHidden) || true,
+
+			// атрибуты, от которых может зависеть
+			// видимость полей при старте скрипта
+			watchAttrs: (window.fieldAutosize && window.fieldAutosize.watchAttrs) || ['style', 'class', 'hidden']
 		};
 	};
 
-	// обрабатываем элементы сразу
-	_.process(_.selector);
-
-	// и после событий на странице
+	// обрабатываем элементы после событий на странице
 	document.documentElement.addEventListener('input', _.process, false);
-	document.documentElement.addEventListener('change', _.process, false);
 
 	// следим за появлением новых элементов
 	function getMutations () {
@@ -151,11 +200,11 @@
 		});
 	};
 
-	// по готовности документа
+	// и действуем по готовности документа
 	function onDomReady() {
 		_.process(_.selector);
 
-		if (window.MutationObserver) {
+		if (MutationObserver) {
 			getMutations();
 		};
 	};
@@ -165,6 +214,31 @@
 	}
 	else {
 		document.addEventListener("DOMContentLoaded", onDomReady, false);
+	};
+		
+	// видим ли элемент
+	function isHidden (elem, style) {
+		if (style === undefined) {
+			style = getComputedStyle(elem);
+		};
+		if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0)
+		|| (style.display === 'none')) {
+			return true;
+		};
+
+		return false;
+	};
+
+	// получаем элементы для отслеживания
+	function getWatchTargets(elem) {
+		var result = [elem];
+
+		while (elem.parentNode !== document) {
+			elem = elem.parentNode;
+			result.push(elem);
+		};
+
+		return result;
 	};
 
 })();

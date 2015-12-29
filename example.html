@@ -4,41 +4,152 @@
 		<meta charset="windows-1251">
 		<title>test--textarea-resize</title>
 
-		<script src="fieldAutosize.js"></script>
+		<style style="display: block; white-space: pre;" contenteditable="true">
 
-		<style>
-		body {
-			box-sizing: border-box;
-		}
+			button,
+			textarea {
+				font-family: inherit;
+			}
 
-		textarea {
-			box-sizing: inherit;
-			border: 15px solid red;
-			display: block;
-			min-height: 7.3em;
-			padding: 10px;
-			resize: horizontal;
-		}
+
+			.page {
+				font-family: 'segoe ui', sans-serif;
+			}
+			.page__header {
+				padding: 0 3%;
+			}
+
+
+			.examples {
+				display: inline-block;
+				width: 100%;
+			}
+			.examples__style {
+				display: block;
+				font-family: consolas, monospace;
+				margin: 0 3%;
+				white-space: pre;
+			}
+			.example {
+				box-sizing: border-box;
+				float: left;
+				min-width: 33%;
+				padding: 1% 3%;
+			}
+
+
+			.bscb { box-sizing: content-box; }
+			.bspb { box-sizing: padding-box; }
+			.bsbb { box-sizing: border-box; }
+
+			.mnh { min-height: 7.3em; }
+
+			.hidden { display: none; }
+
 		</style>
-	</head>
-	<body>
-		<textarea class="lol"></textarea>
-		<p><button id="add">Добавить поле</button></p>
 
+	</head>
+	<body class="page">
+
+		<h1 class="page__header">fieldAutosize</h1>
+
+<style id="examplesStyle" class="examples__style" contenteditable="true">textarea {
+	border: 15px solid red;
+	padding: 10px;
+}</style>
+
+		<div class="examples">
+
+			<div class="example">
+				<h4>Стандартные настройки с внутренним отступом и границей</h4>
+				<textarea></textarea>
+			</div>
+
+			<div class="example">
+				<h4>Разнообразные <code>box-sizing</code></h4>
+				<table><tbody><tr>
+					<td>
+						<p><code>content-box</code></p>
+						<textarea class="bscb"></textarea>
+					</td>
+					<td>
+						<p><code>padding-box</code></p>
+						<textarea class="bspb"></textarea>
+					</td>
+					<td>
+						<p><code>border-box</code></p>
+						<textarea class="bsbb"></textarea>
+					</td>
+				</tr></tbody></table>
+			</div>
+
+			<div class="example">
+				<h4>Минимальная высота</h4>
+				<textarea class="mnh"></textarea>
+			</div>
+
+			<div class="example">
+				<h4>Скрытое поле</h4>
+				<div id="toggleContainer" class="hidden">
+					<textarea></textarea>
+				</div>
+				<p><button id="toggleShow">Показать поле</button></p>
+			</div>
+
+			<div class="example">
+				<h4>Исключение поля</h4>
+				<div class="exclude">
+					<textarea></textarea>
+				</div>
+				<p><button id="handle">Выставить верную высоту</button></p>
+			</div>
+
+			<div id="addContainer" class="example">
+				<h4>Поля, добавляемые динамически</h4>
+				<p><button id="add">Добавить поле</button></p>
+			</div>
+
+		</div>
+
+
+		<script src="fieldAutosize.js"></script>
 		<script>
 
-			function addTextarea() {
-				var t = document.createElement('textarea');
-
-				document.body.appendChild(t);
+			document.getElementById('examplesStyle').oninput = function (e) {
+				fieldAutosize.process();
 			};
 
-			if (window.addEventListener !== undefined) {
-				add.addEventListener('click', addTextarea);
-			} else {
-				add.attachEvent('onclick', addTextarea);
+
+			fieldAutosize.exclude = '.exclude textarea';
+
+			document.getElementById('toggleShow').onclick = function () {
+				var toggleContainer = document.getElementById('toggleContainer');
+				
+				if (toggleContainer.className.match('hidden')) {
+					toggleContainer.className = toggleContainer.className.replace('hidden', '');
+				}
+				else {
+					toggleContainer.className += 'hidden';
+				};
+
+				this.innerHTML.match('Показать') ?
+					this.innerHTML = this.innerHTML.replace('Показать', 'Скрыть')
+					: this.innerHTML = this.innerHTML.replace('Скрыть', 'Показать');
+			};
+
+			document.getElementById('handle').onclick = function () {
+				var textarea = this.parentNode.parentNode.getElementsByTagName('textarea')[0];
+
+				fieldAutosize.handle(textarea);
+			};
+
+			document.getElementById('add').onclick = function () {
+				var t = document.createElement('textarea');
+
+				document.getElementById('addContainer').appendChild(t);
 			};
 
 		</script>
+
 	</body>
 </html>
