@@ -1,9 +1,9 @@
 /*!
  * Автоматическое изменение размера текстового поля под содержимое
- *
- * Версия 1.0.0
- *
  * https://github.com/Ser-Gen/fieldAutosize
+ * 
+ * Версия 1.0.0
+ * 
  * Лицензия MIT
  */
 
@@ -78,13 +78,15 @@
 					if ('target' in e) {
 						elems.push(e.target);
 					}
+
+					// иначе считаем переданное массивом
 					else {
 						elems = e;
 					};
 				}
 
 				// если передана строка, ищем по ней элементы
-				else {
+				else if (typeof e === 'string') {
 					elems = document.querySelectorAll(e);
 				};
 
@@ -95,15 +97,9 @@
 						// если передан неверный элемент
 						// или элемент не должен обрабатываться,
 						// выключаем
-						if ((elem.nodeName.toLowerCase() !== 'textarea')
-							|| (elem.getAttribute('data-fieldAutosize-disable') === 'true')
-							|| (!elem.matches(_.selector))
-							|| (_.exclude !== false && elem.matches(_.exclude))) {
+						if (isCanNotBeHandled(elem)) {
 							return;
 						};
-
-						// отключаем изменение размеров
-						elem.style.resize = 'none';
 
 						_.handle(elem);
 					});
@@ -122,32 +118,21 @@
 				var style = getComputedStyle(elem);
 				var indent;
 
-				// если элемент невидим
-				if (isHidden(elem, style)) {
+				// если нужно следить за невидимыми
+				if (_.watchHidden) {
+					var hiddenIndex = _._hidden.indexOf(elem);
 
-					// если возможно следить за изменениями элементов
-					// следим за элементом и его родителями,
-					// от которых может зависеть отображение элемента
-					if (MutationObserver && _.watchHidden) {
-						var watchTargets = getWatchTargets(elem);
+					// если элемент невидим
+					if (isHidden(elem, style)) {
+						if (hiddenIndex < 0) {
+							_._hidden.push(elem);
+						};
 
-						var observer = new MutationObserver(function(mutations) {
-							mutations.forEach(function(mutation) {
-								observer.disconnect();
-								_.handle(elem);
-							});
-						});
-
-						watchTargets.forEach(function(target, index){
-							observer.observe(target, {
-								attributes: true,
-								attributeFilter: _.watchAttrs
-							});
-						});
+						return;
+					}
+					else if (hiddenIndex > -1) {
+						_._hidden.splice(hiddenIndex, 1);
 					};
-
-					// иначе не делаем ничего
-					return;
 				};
 
 				// нужно выставлять разную высоту
@@ -175,32 +160,66 @@
 			// следить ли за скрытыми полями
 			watchHidden: (window.fieldAutosize && window.fieldAutosize.watchHidden) || true,
 
-			// атрибуты, от которых может зависеть
-			// видимость полей при старте скрипта
-			watchAttrs: (window.fieldAutosize && window.fieldAutosize.watchAttrs) || ['style', 'class', 'hidden']
+			// атрибуты контейнеров, от которых
+			// может зависеть видимость полей
+			// при старте скрипта
+			watchAttrs: (window.fieldAutosize && window.fieldAutosize.watchAttrs) || ['style', 'class', 'hidden'],
+
+			// скрытые элементы
+			_hidden: [],
+
+			// следить ли за изменением размера поля
+			watchResize: (window.fieldAutosize && window.fieldAutosize.watchResize) || true
 		};
 	};
 
 	// обрабатываем элементы после событий на странице
-	document.documentElement.addEventListener('input', _.process, false);
+	document.addEventListener('input', _.process, false);
 
-	// следим за появлением новых элементов
-	function getMutations () {
-		(new MutationObserver(function(mutations) {
-			if (_.active) {
-				mutations.forEach(function(mutation) {
-					if (mutation.type == "childList") {
-						_.process(mutation.addedNodes);
-					};
-				});
+	// действуем по готовности документа
+	if (document.readyState !== "loading") {
+		onDomReady();
+	}
+	else {
+		document.addEventListener("DOMContentLoaded", onDomReady, false);
+	};
+
+	// если нужно следить за изменением размера поля
+	// которое может делать пользователь
+	if (_.watchResize) {
+		var heightValueCache = null;
+		var heightElementCache = null;
+
+		document.addEventListener('mousedown', function (e) {
+
+			// если это обрабатываемый элемент
+			if (!isCanNotBeHandled(e.target)) {
+
+				// записываем его высоту
+				heightElementCache = e.target;
+				heightValueCache = e.target.style.height;
 			};
-		})).observe(document.body, {
-			childList: true,
-			subtree: true
+		});
+
+		document.addEventListener('mouseup', function (e) {
+
+			// если нет записанной высоты, выходим
+			if (!heightValueCache) { return; };
+
+			// если у элемента высота изменилась
+			if (e.target === heightElementCache
+				&& e.target.style.height !== heightValueCache) {
+
+				// делаем его необрабатываемым
+				e.target.setAttribute('data-fieldAutosize-disable', true);
+			};
+
+			heightElementCache = null;
+			heightValueCache = null;
 		});
 	};
 
-	// и действуем по готовности документа
+	// работа по готовности документа
 	function onDomReady() {
 		_.process(_.selector);
 
@@ -209,11 +228,74 @@
 		};
 	};
 
-	if (document.readyState !== "loading") {
-		onDomReady();
-	}
-	else {
-		document.addEventListener("DOMContentLoaded", onDomReady, false);
+	// реакция на изменения документа
+	function getMutations () {
+
+		// следим за появлением новых элементов
+		(new MutationObserver(processNew)).observe(document.body, {
+			childList: true,
+			subtree: true
+		});
+
+		// следим за скрытыми элементами, если нужно
+		if (_.watchHidden) {
+			_.watchAreaAttrs = _.watchAttrs;
+
+			var styleIndex = _.watchAreaAttrs.indexOf('style');
+
+			if (styleIndex > -1) {
+				_.watchAreaAttrs.splice(styleIndex, 1);
+			};
+
+			(new MutationObserver(processHidden)).observe(document.body, {
+				attributes: true,
+				attributeFilter: _.watchAttrs,
+				subtree: true
+			});
+		};
+	};
+
+	// обработка добавляемых элементов
+	function processNew (mutations) {
+		if (_.active) {
+			mutations.forEach(function(mutation) {
+				if (mutation.type == "childList") {
+					throttle(_.process(mutation.addedNodes));
+				};
+			});
+		};
+	};
+
+	// обработка изменений атрибутов
+	function processHidden (mutations) {
+
+		// если нет скрытых элементов
+		if (!_._hidden.length) { return; };
+
+		// если есть скрытые
+		mutations.forEach(function(mutation) {
+			if (mutation.target) {
+
+				// если изменился атрибут текстового поля
+				if (mutation.target.nodeName === 'TEXTAREA' && _.watchAreaAttrs.indexOf(mutation.attributeName) > -1) {
+					throttle(_.handle(mutation.target));
+				}
+
+				// если изменился атрибут произвольного элемента
+				// ищем текстовые поля внутри
+				else {
+					throttle(_.process(_._hidden));
+				};
+			};
+		});
+	};
+
+	// должен ли обрабатываться элемент
+	function isCanNotBeHandled (elem) {
+		return elem.nodeName.toLowerCase() !== 'textarea'
+		|| elem.getAttribute('data-fieldAutosize-disable') === 'true'
+		|| !elem.matches(_.selector)
+		|| (_.exclude !== false && elem.matches(_.exclude));
 	};
 		
 	// видим ли элемент
@@ -229,16 +311,28 @@
 		return false;
 	};
 
-	// получаем элементы для отслеживания
-	function getWatchTargets(elem) {
-		var result = [elem];
+	// функция-регулятор
+	// для ограничения количества вызовов фукнции
+	function throttle (func, ms) {
+		var args, _this;
 
-		while (elem.parentNode !== document) {
-			elem = elem.parentNode;
-			result.push(elem);
+		return function () {
+			if (args === void 0) {
+				args = arguments;
+				_this = this;
+
+				setTimeout(function () {
+					if (args.length === 1) {
+						func.call(_this, args[0]);
+					}
+					else {
+						func.apply(_this, args);
+					};
+
+					args = void 0;
+				}, ms || 50);
+			};
 		};
-
-		return result;
 	};
 
 })();
