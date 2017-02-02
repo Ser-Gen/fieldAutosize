@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<meta charset="windows-1251">
+		<meta charset="utf-8">
 		<title>test--textarea-resize</title>
 
 		<style style="display: block; white-space: pre;" contenteditable="true">
@@ -56,12 +56,12 @@
 		<div class="examples">
 
 			<div class="example">
-				<h4>Стандартные настройки с внутренним отступом и границей</h4>
+				<h4>РЎС‚Р°РЅРґР°СЂС‚РЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё СЃ РІРЅСѓС‚СЂРµРЅРЅРёРј РѕС‚СЃС‚СѓРїРѕРј Рё РіСЂР°РЅРёС†РµР№</h4>
 				<textarea></textarea>
 			</div>
 
 			<div class="example">
-				<h4>Разнообразные <code>box-sizing</code></h4>
+				<h4>Р Р°Р·РЅРѕРѕР±СЂР°Р·РЅС‹Рµ <code>box-sizing</code></h4>
 				<table><tbody><tr>
 					<td>
 						<p><code>content-box</code></p>
@@ -79,29 +79,29 @@
 			</div>
 
 			<div class="example">
-				<h4>Минимальная высота</h4>
+				<h4>РњРёРЅРёРјР°Р»СЊРЅР°СЏ РІС‹СЃРѕС‚Р°</h4>
 				<textarea class="mnh"></textarea>
 			</div>
 
 			<div class="example">
-				<h4>Скрытое поле</h4>
+				<h4>РЎРєСЂС‹С‚РѕРµ РїРѕР»Рµ</h4>
 				<div id="toggleContainer" class="hidden">
 					<textarea></textarea>
 				</div>
-				<p><button id="toggleShow">Показать поле</button></p>
+				<p><button id="toggleShow">РџРѕРєР°Р·Р°С‚СЊ РїРѕР»Рµ</button></p>
 			</div>
 
 			<div class="example">
-				<h4>Исключение поля</h4>
+				<h4>РСЃРєР»СЋС‡РµРЅРёРµ РїРѕР»СЏ</h4>
 				<div class="exclude">
 					<textarea></textarea>
 				</div>
-				<p><button id="handle">Выставить верную высоту</button></p>
+				<p><button id="handle">Р’С‹СЃС‚Р°РІРёС‚СЊ РІРµСЂРЅСѓСЋ РІС‹СЃРѕС‚Сѓ</button></p>
 			</div>
 
 			<div id="addContainer" class="example">
-				<h4>Поля, добавляемые динамически</h4>
-				<p><button id="add">Добавить поле</button></p>
+				<h4>РџРѕР»СЏ, РґРѕР±Р°РІР»СЏРµРјС‹Рµ РґРёРЅР°РјРёС‡РµСЃРєРё</h4>
+				<p><button id="add">Р”РѕР±Р°РІРёС‚СЊ РїРѕР»Рµ</button></p>
 			</div>
 
 		</div>
@@ -133,9 +133,9 @@
 					toggleContainer.className += 'hidden';
 				};
 
-				this.innerHTML.match('Показать') ?
-					this.innerHTML = this.innerHTML.replace('Показать', 'Скрыть')
-					: this.innerHTML = this.innerHTML.replace('Скрыть', 'Показать');
+				this.innerHTML.match('РџРѕРєР°Р·Р°С‚СЊ') ?
+					this.innerHTML = this.innerHTML.replace('РџРѕРєР°Р·Р°С‚СЊ', 'РЎРєСЂС‹С‚СЊ')
+					: this.innerHTML = this.innerHTML.replace('РЎРєСЂС‹С‚СЊ', 'РџРѕРєР°Р·Р°С‚СЊ');
 			};
 
 			document.getElementById('handle').onclick = function () {
