@@ -7,6 +7,37 @@
  * Лицензия MIT
  */
 
+// нестандартное событие
+if (!'CustomEvent' in window) {
+	window.CustomEvent = function CustomEvent(type, eventInitDict) {
+		if (!type) {
+			throw Error('TypeError: Failed to construct "CustomEvent": An event name must be provided.');
+		}
+
+		var event;
+		eventInitDict = eventInitDict || {bubbles: false, cancelable: false, detail: null};
+
+		if ('createEvent' in document) {
+			try {
+				event = document.createEvent('CustomEvent');
+				event.initCustomEvent(type, eventInitDict.bubbles, eventInitDict.cancelable, eventInitDict.detail);
+			} catch (error) {
+				event = document.createEvent('Event');
+				event.initEvent(type, eventInitDict.bubbles, eventInitDict.cancelable);
+				event.detail = eventInitDict.detail;
+			}
+		}
+		else {
+			event = new Event(type, eventInitDict);
+			event.detail = eventInitDict && eventInitDict.detail || null;
+		}
+
+		return event;
+	};
+
+	CustomEvent.prototype = Event.prototype;
+};
+
 (function() {
 
 	// проверяем, доступны ли нужные возможности
@@ -141,17 +172,27 @@
 					indent = -(parseInt(style.borderTopWidth)
 					         + parseInt(style.borderBottomWidth));
 				}
-				else if (style.boxSizing === 'padding-box') {
-					indent = 0;
-				}
 				else {
 					indent = parseInt(style.paddingTop)
 					       + parseInt(style.paddingBottom);
 				};
 
+				// текущая прокрутка документа
+				var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+				var scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+
 				// установка высоты элемента
-				elem.style.height = 0;
+				elem.style.height = 'auto';
+
+				var newHeight = elem.scrollHeight - indent;
+
 				elem.style.height = elem.scrollHeight - indent +'px';
+				trigger(elem, 'resize', {
+					height: newHeight + indent
+				});
+
+				// восстановление прокрутки документа
+				window.scrollTo(scrollX, scrollY);
 			},
 
 			// включен ли плагин
@@ -175,6 +216,9 @@
 
 	// обрабатываем элементы после событий на странице
 	document.addEventListener('input', _.process, false);
+	window.addEventListener('resize', function () {
+		_.process(_.selector);
+	}, false);
 
 	// действуем по готовности документа
 	if (document.readyState !== "loading") {
@@ -333,6 +377,15 @@
 				}, ms || 50);
 			};
 		};
+	};
+
+	// генерация событий
+	function trigger (elem, name, data) {
+		var event = new CustomEvent('fieldAutosize:'+ name, {
+			detail: data || null
+		});
+
+		elem.dispatchEvent(event);
 	};
 
 })();
