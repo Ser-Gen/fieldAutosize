@@ -164,10 +164,14 @@
 				document.getElementById('addContainer').appendChild(t);
 			};
 
-			document.querySelector('.animated__field').addEventListener('fieldAutosize:resize', function (e) {
-				var container = e.target.closest('.animated');
+			document.addEventListener('fieldAutosize:resize', function (e) {
+				var obj = e.target.closest('.animated__field');
 
-				container.style.height = e.detail.height +'px';
+				if (obj) {
+					var container = obj.closest('.animated');
+
+					container.style.height = e.detail.height +'px';
+				};
 			});
 
 		</script>
