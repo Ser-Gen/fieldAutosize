@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.0.0
+ * Версия 1.1.0
  * 
  * Лицензия MIT
  */
@@ -382,6 +382,7 @@ if (!'CustomEvent' in window) {
 	// генерация событий
 	function trigger (elem, name, data) {
 		var event = new CustomEvent('fieldAutosize:'+ name, {
+			bubbles: true,
 			detail: data || null
 		});
 
