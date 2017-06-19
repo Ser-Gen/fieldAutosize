@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.1.0
+ * Версия 1.1.1
  * 
  * Лицензия MIT
  */
@@ -272,11 +272,14 @@ if (!'CustomEvent' in window) {
 		};
 	};
 
+	var processNewThrottled = throttle(processNew);
+	var processHiddenThrottled = throttle(processHidden);
+
 	// реакция на изменения документа
 	function getMutations () {
 
 		// следим за появлением новых элементов
-		(new MutationObserver(processNew)).observe(document.body, {
+		(new MutationObserver(processNewThrottled)).observe(document.body, {
 			childList: true,
 			subtree: true
 		});
@@ -291,7 +294,7 @@ if (!'CustomEvent' in window) {
 				_.watchAreaAttrs.splice(styleIndex, 1);
 			};
 
-			(new MutationObserver(processHidden)).observe(document.body, {
+			(new MutationObserver(processHiddenThrottled)).observe(document.body, {
 				attributes: true,
 				attributeFilter: _.watchAttrs,
 				subtree: true
@@ -358,25 +361,30 @@ if (!'CustomEvent' in window) {
 	// функция-регулятор
 	// для ограничения количества вызовов фукнции
 	function throttle (func, ms) {
-		var args, _this;
+		var isThrottled = false;
+		var savedArgs;
+		var savedThis;
 
-		return function () {
-			if (args === void 0) {
-				args = arguments;
-				_this = this;
-
-				setTimeout(function () {
-					if (args.length === 1) {
-						func.call(_this, args[0]);
-					}
-					else {
-						func.apply(_this, args);
-					};
-
-					args = void 0;
-				}, ms || 50);
+		function wrapper() {
+			if (isThrottled) {
+				savedArgs = arguments;
+				savedThis = this;
+				return;
 			};
+
+			func.apply(this, arguments);
+			isThrottled = true;
+
+			setTimeout(function() {
+				isThrottled = false;
+				if (savedArgs) {
+					wrapper.apply(savedThis, savedArgs);
+					savedArgs = savedThis = null;
+				}
+			}, ms || 100);
 		};
+
+		return wrapper;
 	};
 
 	// генерация событий
