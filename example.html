@@ -108,7 +108,7 @@
 			<div class="example">
 				<h4>Исключение поля</h4>
 				<div class="exclude">
-					<textarea>
+					<textarea id="excluded">
 
 
 
@@ -146,8 +146,8 @@
 
 			fieldAutosize.exclude = '.exclude textarea';
 
-			setTimeout(() => {
-				document.querySelector('.exclude textarea').classList.add('kek');
+			setTimeout(function () {
+				document.getElementById('excluded').className += ' test-attr-change';
 			}, 3000);
 
 			document.getElementById('toggleShow').onclick = function () {
