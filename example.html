@@ -108,7 +108,16 @@
 			<div class="example">
 				<h4>Исключение поля</h4>
 				<div class="exclude">
-					<textarea></textarea>
+					<textarea>
+
+
+
+						бац!
+						а тут текст
+
+
+
+					</textarea>
 				</div>
 				<p><button id="handle">Выставить верную высоту</button></p>
 			</div>
@@ -136,6 +145,10 @@
 
 
 			fieldAutosize.exclude = '.exclude textarea';
+
+			setTimeout(() => {
+				document.querySelector('.exclude textarea').classList.add('kek');
+			}, 3000);
 
 			document.getElementById('toggleShow').onclick = function () {
 				var toggleContainer = document.getElementById('toggleContainer');

@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.1.1
+ * Версия 1.1.2
  * 
  * Лицензия MIT
  */
@@ -324,7 +324,11 @@ if (!'CustomEvent' in window) {
 			if (mutation.target) {
 
 				// если изменился атрибут текстового поля
-				if (mutation.target.nodeName === 'TEXTAREA' && _.watchAreaAttrs.indexOf(mutation.attributeName) > -1) {
+				if (
+					mutation.target.nodeName === 'TEXTAREA'
+					&& _.watchAreaAttrs.indexOf(mutation.attributeName) > -1
+					&& !isCanNotBeHandled(mutation.target)
+				) {
 					throttle(_.handle(mutation.target));
 				}
 
