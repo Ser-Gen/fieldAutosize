@@ -57,6 +57,17 @@
 
 			.hidden { display: none; }
 
+			.added {
+				display: inline-block;
+			}
+			.addedInput {
+				height: 100px;
+			}
+			.addedInputWithMinHeight {
+				height: auto;
+				min-height: 100px;
+			}
+
 		</style>
 
 	</head>
@@ -124,7 +135,11 @@
 
 			<div id="addContainer" class="example">
 				<h4>Поля, добавляемые динамически</h4>
-				<p><button id="add">Добавить поле</button></p>
+				<p>
+					<button id="add">Добавить поле</button>
+					<button id="addWithMinHeight">Добавить с минимальной высотой</button>
+					<button id="addWithWrapper">Добавить с обёрткой</button>
+				</p>
 			</div>
 
 		</div>
@@ -171,11 +186,9 @@
 				fieldAutosize.handle(textarea);
 			};
 
-			document.getElementById('add').onclick = function () {
-				var t = document.createElement('textarea');
-
-				document.getElementById('addContainer').appendChild(t);
-			};
+			document.getElementById('add').onclick = add;
+			document.getElementById('addWithMinHeight').onclick = add;
+			document.getElementById('addWithWrapper').onclick = add;
 
 			document.addEventListener('fieldAutosize:resize', function (e) {
 				var obj = e.target.closest('.animated__field');
@@ -186,6 +199,25 @@
 					container.style.height = e.detail.height +'px';
 				};
 			});
+
+			function add (e) {
+				var result = document.createElement('textarea');
+				var wrapper;
+
+				result.className = 'addedInput';
+
+				if (e.target.id === 'addWithMinHeight') {
+					result.className += ' addedInputWithMinHeight';
+				}
+				else if (e.target.id === 'addWithWrapper') {
+					wrapper = document.createElement('div');
+					wrapper.className = 'added';
+					wrapper.appendChild(result);
+					result = wrapper;
+				}
+
+				document.getElementById('addContainer').appendChild(result);
+			}
 
 		</script>
 
