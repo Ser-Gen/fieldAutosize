@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.1.3
+ * Версия 1.1.4
  * 
  * Лицензия MIT
  */
@@ -116,6 +116,11 @@ if (!'CustomEvent' in window) {
 						|| Array.isArray(e)
 					) {
 						elems = e;
+					}
+
+					// элементы закидываем в массив
+					else if (e instanceof Element) {
+						elems.push(e);
 					};
 				}
 
@@ -126,19 +131,22 @@ if (!'CustomEvent' in window) {
 
 				// если есть элементы для обработки
 				if (elems.length) {
-					[].forEach.call(elems, _.handle);
+					[].forEach.call(elems, function (elem) {
+
+						// если передан неверный элемент
+						// или элемент не должен обрабатываться,
+						// выходим
+						if (isCanNotBeHandled(elem)) {
+							return;
+						};
+
+						_.handle(elem);
+					});
 				};
 			},
 
 			// обрабатываем элемент
 			handle: function (elem) {
-
-				// если передан неверный элемент
-				// или элемент не должен обрабатываться,
-				// выходим
-				if (isCanNotBeHandled(elem)) {
-					return;
-				};
 
 				// если выключен, выходим
 				if (!_.active) {
@@ -316,7 +324,7 @@ if (!'CustomEvent' in window) {
 				return;
 			}
 
-			throttle(_.handle)(mutation.target);
+			throttle(_.process)(mutation.target);
 
 			// если изменился атрибут произвольного элемента
 			// ищем текстовые поля внутри
@@ -329,7 +337,7 @@ if (!'CustomEvent' in window) {
 					return;
 				}
 
-				throttle(_.handle)(newNode);
+				throttle(_.process)(newNode);
 				throttle(_.process)(newNode.querySelectorAll(_.selector));
 			})
 		});
@@ -352,7 +360,7 @@ if (!'CustomEvent' in window) {
 				mutation.target.nodeName === 'TEXTAREA'
 				&& _.watchAreaAttrs.indexOf(mutation.attributeName) > -1
 			) {
-				throttle(_.handle)(mutation.target);
+				throttle(_.process)(mutation.target);
 			}
 
 			// если изменился атрибут произвольного элемента
