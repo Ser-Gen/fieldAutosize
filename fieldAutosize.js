@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.1.2
+ * Версия 1.1.3
  * 
  * Лицензия MIT
  */
@@ -111,7 +111,10 @@ if (!'CustomEvent' in window) {
 					}
 
 					// иначе считаем переданное массивом
-					else {
+					else if (
+						e instanceof NodeList
+						|| Array.isArray(e)
+					) {
 						elems = e;
 					};
 				}
@@ -123,22 +126,19 @@ if (!'CustomEvent' in window) {
 
 				// если есть элементы для обработки
 				if (elems.length) {
-					[].forEach.call(elems, function (elem) {
-
-						// если передан неверный элемент
-						// или элемент не должен обрабатываться,
-						// выключаем
-						if (isCanNotBeHandled(elem)) {
-							return;
-						};
-
-						_.handle(elem);
-					});
+					[].forEach.call(elems, _.handle);
 				};
 			},
 
 			// обрабатываем элемент
 			handle: function (elem) {
+
+				// если передан неверный элемент
+				// или элемент не должен обрабатываться,
+				// выходим
+				if (isCanNotBeHandled(elem)) {
+					return;
+				};
 
 				// если выключен, выходим
 				if (!_.active) {
@@ -187,6 +187,7 @@ if (!'CustomEvent' in window) {
 				var newHeight = elem.scrollHeight - indent;
 
 				elem.style.height = elem.scrollHeight - indent +'px';
+
 				trigger(elem, 'resize', {
 					height: newHeight + indent
 				});
@@ -285,32 +286,53 @@ if (!'CustomEvent' in window) {
 		});
 
 		// следим за скрытыми элементами, если нужно
-		if (_.watchHidden) {
-			_.watchAreaAttrs = _.watchAttrs;
-
-			var styleIndex = _.watchAreaAttrs.indexOf('style');
-
-			if (styleIndex > -1) {
-				_.watchAreaAttrs.splice(styleIndex, 1);
-			};
-
-			(new MutationObserver(processHiddenThrottled)).observe(document.body, {
-				attributes: true,
-				attributeFilter: _.watchAttrs,
-				subtree: true
-			});
+		if (!_.watchHidden) {
+			return;
 		};
+
+		_.watchAreaAttrs = _.watchAttrs;
+
+		var styleIndex = _.watchAreaAttrs.indexOf('style');
+
+		if (styleIndex > -1) {
+			_.watchAreaAttrs.splice(styleIndex, 1);
+		};
+
+		(new MutationObserver(processHiddenThrottled)).observe(document.body, {
+			attributes: true,
+			attributeFilter: _.watchAttrs,
+			subtree: true
+		});
 	};
 
 	// обработка добавляемых элементов
 	function processNew (mutations) {
-		if (_.active) {
-			mutations.forEach(function(mutation) {
-				if (mutation.type == "childList") {
-					throttle(_.process(mutation.addedNodes));
-				};
-			});
+		if (!_.active) {
+			return;
 		};
+
+		mutations.forEach(function(mutation) {
+			if (!mutation.target) {
+				return;
+			}
+
+			throttle(_.handle)(mutation.target);
+
+			// если изменился атрибут произвольного элемента
+			// ищем текстовые поля внутри
+			if (mutation.type !== "childList") {
+				return;
+			};
+
+			[].forEach.call(mutation.addedNodes, function (newNode) {
+				if (!newNode.querySelectorAll) {
+					return;
+				}
+
+				throttle(_.handle)(newNode);
+				throttle(_.process)(newNode.querySelectorAll(_.selector));
+			})
+		});
 	};
 
 	// обработка изменений атрибутов
@@ -321,41 +343,60 @@ if (!'CustomEvent' in window) {
 
 		// если есть скрытые
 		mutations.forEach(function(mutation) {
-			if (mutation.target) {
+			if (!mutation.target) {
+				return;
+			};
 
-				// если изменился атрибут текстового поля
-				if (
-					mutation.target.nodeName === 'TEXTAREA'
-					&& _.watchAreaAttrs.indexOf(mutation.attributeName) > -1
-					&& !isCanNotBeHandled(mutation.target)
-				) {
-					throttle(_.handle(mutation.target));
-				}
+			// если изменился атрибут текстового поля
+			if (
+				mutation.target.nodeName === 'TEXTAREA'
+				&& _.watchAreaAttrs.indexOf(mutation.attributeName) > -1
+			) {
+				throttle(_.handle)(mutation.target);
+			}
 
-				// если изменился атрибут произвольного элемента
-				// ищем текстовые поля внутри
-				else {
-					throttle(_.process(_._hidden));
-				};
+			// если изменился атрибут произвольного элемента
+			// ищем текстовые поля внутри
+			else {
+				throttle(_.process)(_._hidden);
 			};
 		});
 	};
 
 	// должен ли обрабатываться элемент
 	function isCanNotBeHandled (elem) {
-		return elem.nodeName.toLowerCase() !== 'textarea'
-		|| elem.getAttribute('data-fieldAutosize-disable') === 'true'
-		|| !elem.matches(_.selector)
-		|| (_.exclude !== false && elem.matches(_.exclude));
+		return (
+			elem.nodeName
+			&& elem.nodeName !== 'TEXTAREA'
+		)
+		|| (
+			elem.getAttribute
+			&& elem.getAttribute('data-fieldAutosize-disable') === 'true'
+		)
+		|| (
+			elem.matches
+			&& !elem.matches(_.selector)
+		)
+		|| (
+			_.exclude !== false
+			&& elem.matches
+			&& elem.matches(_.exclude)
+		);
 	};
 		
 	// видим ли элемент
 	function isHidden (elem, style) {
-		if (style === undefined) {
+		if (typeof style === 'undefined') {
 			style = getComputedStyle(elem);
 		};
-		if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0)
-		|| (style.display === 'none')) {
+		
+		if (
+			(
+				elem.offsetWidth <= 0
+				&& elem.offsetHeight <= 0
+			)
+			|| style.display === 'none'
+		) {
 			return true;
 		};
 
