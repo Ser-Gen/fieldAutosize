@@ -2,7 +2,7 @@
  * Автоматическое изменение размера текстового поля под содержимое
  * https://github.com/Ser-Gen/fieldAutosize
  * 
- * Версия 1.1.4
+ * Версия 1.1.5
  * 
  * Лицензия MIT
  */
@@ -148,8 +148,13 @@ if (!'CustomEvent' in window) {
 			// обрабатываем элемент
 			handle: function (elem) {
 
-				// если выключен, выходим
-				if (!_.active) {
+				// если выключен
+				// или не текстовое поле
+				// выходим
+				if (
+					!_.active
+					|| !isTextarea(elem)
+				) {
 					return;
 				};
 
@@ -357,7 +362,7 @@ if (!'CustomEvent' in window) {
 
 			// если изменился атрибут текстового поля
 			if (
-				mutation.target.nodeName === 'TEXTAREA'
+				isTextarea(mutation.target.nodeName)
 				&& _.watchAreaAttrs.indexOf(mutation.attributeName) > -1
 			) {
 				throttle(_.process)(mutation.target);
@@ -374,8 +379,7 @@ if (!'CustomEvent' in window) {
 	// должен ли обрабатываться элемент
 	function isCanNotBeHandled (elem) {
 		return (
-			elem.nodeName
-			&& elem.nodeName !== 'TEXTAREA'
+			!isTextarea(elem)
 		)
 		|| (
 			elem.getAttribute
@@ -391,6 +395,14 @@ if (!'CustomEvent' in window) {
 			&& elem.matches(_.exclude)
 		);
 	};
+
+	// передано ли текстовое поле
+	function isTextarea (elem) {
+		return (
+			elem.nodeName
+			&& elem.nodeName === 'TEXTAREA'
+		)
+	}
 		
 	// видим ли элемент
 	function isHidden (elem, style) {

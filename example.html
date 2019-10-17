@@ -55,7 +55,7 @@
 
 			.mnh { min-height: 7.3em; }
 
-			.hidden { display: none; }
+			[hidden] { display: none; }
 
 			.added {
 				display: inline-block;
@@ -74,6 +74,11 @@
 	<body class="page">
 
 		<h1 class="page__header">fieldAutosize</h1>
+
+<style id="examplesStyle" class="examples__style" contenteditable="true">textarea {
+	border: 15px solid red;
+	padding: 10px;
+}</style>
 
 		<div class="examples">
 
@@ -110,7 +115,7 @@
 
 			<div class="example">
 				<h4>Скрытое поле</h4>
-				<div id="toggleContainer" class="hidden">
+				<div id="toggleContainer" hidden>
 					<textarea></textarea>
 				</div>
 				<p><button id="toggleShow">Показать поле</button></p>
@@ -145,12 +150,6 @@
 		</div>
 
 
-<style id="examplesStyle" class="examples__style" contenteditable="true">textarea {
-	border: 15px solid red;
-	padding: 10px;
-}</style>
-
-
 		<script src="fieldAutosize.js"></script>
 		<script>
 
@@ -168,12 +167,7 @@
 			document.getElementById('toggleShow').onclick = function () {
 				var toggleContainer = document.getElementById('toggleContainer');
 				
-				if (toggleContainer.className.match('hidden')) {
-					toggleContainer.className = toggleContainer.className.replace('hidden', '');
-				}
-				else {
-					toggleContainer.className += 'hidden';
-				};
+				toggleContainer.hidden = !toggleContainer.hidden;
 
 				this.innerHTML.match('Показать') ?
 					this.innerHTML = this.innerHTML.replace('Показать', 'Скрыть')
